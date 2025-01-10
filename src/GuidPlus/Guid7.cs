@@ -20,7 +20,12 @@ namespace GuidPlus
         /// </summary>
         public static Guid NewGuid()
         {
-            var node = new byte[8];
+#if !NETSTANDARD2_0
+            Span<byte> node = stackalloc byte[8];
+#else
+            using var nodeScope = ArrayScope.Rent<byte>(8);
+            var node = nodeScope.Array;
+#endif
             using (var randomNumberGenerator = RandomNumberGenerator.Create())
             {
                 randomNumberGenerator.GetBytes(node);
@@ -36,7 +41,16 @@ namespace GuidPlus
         /// 8 node bytes to add to the end of the GUID.
         /// The first two bits of the first byte will by overwritten with <c>0b10</c>.
         /// </param>
-        public static Guid NewGuid(byte[] node)
+        public static Guid NewGuid(byte[] node) => NewGuid(node.AsSpan());
+
+        /// <summary>
+        /// Generates a version 7 UUID with the specified node bytes.
+        /// </summary>
+        /// <param name="node">
+        /// 8 node bytes to add to the end of the GUID.
+        /// The first two bits of the first byte will by overwritten with <c>0b10</c>.
+        /// </param>
+        public static Guid NewGuid(Span<byte> node)
         {
             if (node.Length != 8)
             {
@@ -60,25 +74,31 @@ namespace GuidPlus
             var msec = (uint)unixDiff.Milliseconds;
             var clockSeq = sequence & 0x3fff | 0x7000;
 
-            return new Guid(new[]
-            {
-                (byte)(unixTs >> 4),
-                (byte)(unixTs >> 12),
-                (byte)(unixTs >> 20),
-                (byte)(unixTs >> 28),
-                (byte)(msec),
-                (byte)((unixTs << 4) | (msec >> 8)),
-                (byte)(clockSeq),
-                (byte)(clockSeq >> 8),
-                (byte)(node[0] & 0x3f | 0x80),
-                node[1],
-                node[2],
-                node[3],
-                node[4],
-                node[5],
-                node[6],
-                node[7]
-            });
+#if !NETSTANDARD2_0
+            Span<byte> guidBytes = stackalloc byte[16];
+#else
+            using var guidBytesScope = ArrayScope.Rent<byte>(16);
+            var guidBytes = guidBytesScope.Array;
+#endif
+
+            guidBytes[0] = (byte)(unixTs >> 4);
+            guidBytes[1] = (byte)(unixTs >> 12);
+            guidBytes[2] = (byte)(unixTs >> 20);
+            guidBytes[3] = (byte)(unixTs >> 28);
+            guidBytes[4] = (byte)(msec);
+            guidBytes[5] = (byte)((unixTs << 4) | (msec >> 8));
+            guidBytes[6] = (byte)(clockSeq);
+            guidBytes[7] = (byte)(clockSeq >> 8);
+            guidBytes[8] = (byte)(node[0] & 0x3f | 0x80);
+            guidBytes[9] = node[1];
+            guidBytes[10] = node[2];
+            guidBytes[11] = node[3];
+            guidBytes[12] = node[4];
+            guidBytes[13] = node[5];
+            guidBytes[14] = node[6];
+            guidBytes[15] = node[7];
+
+            return new Guid(guidBytes);
         }
     }
 }

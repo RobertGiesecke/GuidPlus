@@ -20,7 +20,13 @@ namespace GuidPlus
         /// </summary>
         public static Guid NewGuid()
         {
-            var node = new byte[6];
+
+#if !NETSTANDARD2_0
+            Span<byte> node = stackalloc byte[6];
+#else
+            using var nodeScope = ArrayScope.Rent<byte>(6);
+            var node = nodeScope.Array;
+#endif
             using (var randomNumberGenerator = RandomNumberGenerator.Create())
             {
                 randomNumberGenerator.GetBytes(node);
@@ -33,7 +39,13 @@ namespace GuidPlus
         /// Generates a version 6 UUID with the specified node bytes.
         /// </summary>
         /// <param name="node">6 node bytes to add to the end of the GUID.</param>
-        public static Guid NewGuid(byte[] node)
+        public static Guid NewGuid(byte[] node) => NewGuid(node.AsSpan());
+
+        /// <summary>
+        /// Generates a version 6 UUID with the specified node bytes.
+        /// </summary>
+        /// <param name="node">6 node bytes to add to the end of the GUID.</param>
+        public static Guid NewGuid(Span<byte> node)
         {
             if (node.Length != 6)
             {
