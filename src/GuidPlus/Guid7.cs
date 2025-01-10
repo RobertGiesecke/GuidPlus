@@ -10,7 +10,7 @@ namespace GuidPlus
     {
         internal static Func<DateTime> _getTime = () => DateTime.UtcNow;
         private static readonly DateTime _unixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-        private static readonly object _sequenceLock = new object();
+        private static readonly LockClass _sequenceLock = new();
         private static DateTime _lastClock;
         private static int _sequence;
 

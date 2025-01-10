@@ -16,7 +16,7 @@ namespace GuidPlus
             private readonly Func<ulong> _timeSource;
             private readonly int _timeSize;
             private readonly Func<byte[]> _nodeGenerator;
-            private readonly object _sequenceLock = new object();
+            private readonly LockClass _sequenceLock = new();
             private ulong _lastClock;
             private int _sequence;
 
