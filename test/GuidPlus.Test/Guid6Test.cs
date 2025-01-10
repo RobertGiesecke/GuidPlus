@@ -40,6 +40,17 @@ namespace GuidPlus.Test
         }
 
         [Fact]
+        public void NodeBitsAreSetSpan()
+        {
+            Span<byte> node = stackalloc byte[] { 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff };
+
+            var guid = Guid6.NewGuid(node);
+
+            var nodeBits = long.Parse(guid.ToString()[24..], NumberStyles.HexNumber);
+            Assert.Equal(0xaabbccddeeff, nodeBits);
+        }
+
+        [Fact]
         public void NodeBitsAreRandomized()
         {
             var guidA = Guid6.NewGuid();
