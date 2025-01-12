@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Buffers;
 
-namespace GuidPlus;
+namespace GuidPlus.Internal;
 
 /// <summary>
 /// create new <see cref="ArrayScope{T}"/> instances/>

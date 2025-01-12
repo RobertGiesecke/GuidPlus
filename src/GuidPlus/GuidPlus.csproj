@@ -64,5 +64,9 @@
       <_Parameter1>GuidPlus.Test</_Parameter1>
     </AssemblyAttribute>
   </ItemGroup>
+  
+  <ItemGroup>
+    <Using Include="$(RootNamespace).Internal"/>
+  </ItemGroup>
 
 </Project>

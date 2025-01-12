@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 
-namespace GuidPlus;
+namespace GuidPlus.Internal;
 
 /// <summary>
 /// helper class to randomize a byte array or span
