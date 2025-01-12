@@ -8,17 +8,43 @@ namespace GuidPlus.Internal;
 /// </summary>
 internal static class RandomBytes
 {
+    static readonly RandomNumberGenerator SharedRandomNumberGenerator = RandomNumberGenerator.Create();
+
+    [ThreadStatic] private static Random _random;
+
+    private static Random GetRandom() => _random ??= new Random(GetRandomSeed());
+
+    private static int GetRandomSeed()
+    {
+        using var bytes = ArrayScope.Rent<byte>(4);
+        SharedRandomNumberGenerator.GetBytes(bytes.Array, 0, 4);
+        var seed = BitConverter.ToInt32(bytes.Array, 0);
+        return seed;
+    }
+
+#if NETSTANDARD2_0
     public static void GetBytes(byte[] bytes, int length)
     {
-        using var randomNumberGenerator = RandomNumberGenerator.Create();
-        randomNumberGenerator.GetBytes(bytes, 0, length);
+        GetRandom().NextBytes(bytes);
     }
+#else
+    public static void GetBytes(byte[] bytes, int length)
+    {
+        if (bytes.Length == length)
+        {
+            GetRandom().NextBytes(bytes);
+            return;
+        }
+
+        var span = bytes.AsSpan().Slice(0, length);
+        GetRandom().NextBytes(span);
+    }
+#endif
 
 #if !NETSTANDARD2_0
     public static void GetBytes(Span<byte> bytes)
     {
-        using var randomNumberGenerator = RandomNumberGenerator.Create();
-        randomNumberGenerator.GetBytes(bytes);
+        GetRandom().NextBytes(bytes);
     }
 
     public static void GetBytes(Span<byte> bytes, int length)
@@ -27,6 +53,7 @@ internal static class RandomBytes
         {
             bytes = bytes[..length];
         }
+
         GetBytes(bytes);
     }
 #endif

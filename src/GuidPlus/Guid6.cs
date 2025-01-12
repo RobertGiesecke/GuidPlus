@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Security.Cryptography;
 
 namespace GuidPlus
 {
@@ -20,16 +19,16 @@ namespace GuidPlus
         /// </summary>
         public static Guid NewGuid()
         {
-
+            const int requiredNodeSize = 6;
 #if !NETSTANDARD2_0
-            Span<byte> node = stackalloc byte[6];
+            Span<byte> node = stackalloc byte[requiredNodeSize];
             var span = node;
 #else
-            using var nodeScope = ArrayScope.Rent<byte>(6);
+            using var nodeScope = ArrayScope.Rent<byte>(requiredNodeSize);
             var node = nodeScope.Array;
             var span = nodeScope.AsSpan();
 #endif
-            RandomBytes.GetBytes(node, 8);
+            RandomBytes.GetBytes(node, requiredNodeSize);
 
             return NewGuid(span);
         }
