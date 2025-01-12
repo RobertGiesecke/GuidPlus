@@ -73,31 +73,20 @@ namespace GuidPlus
             var msec = (uint)unixDiff.Milliseconds;
             var clockSeq = sequence & 0x3fff | 0x7000;
 
-#if !NETSTANDARD2_0
-            Span<byte> guidBytes = stackalloc byte[16];
-#else
-            using var guidBytesScope = ArrayScope.Rent<byte>(16);
-            var guidBytes = guidBytesScope.Array;
-#endif
+            var a = (uint)(unixTs >> 4);
 
-            guidBytes[0] = (byte)(unixTs >> 4);
-            guidBytes[1] = (byte)(unixTs >> 12);
-            guidBytes[2] = (byte)(unixTs >> 20);
-            guidBytes[3] = (byte)(unixTs >> 28);
-            guidBytes[4] = (byte)(msec);
-            guidBytes[5] = (byte)((unixTs << 4) | (msec >> 8));
-            guidBytes[6] = (byte)(clockSeq);
-            guidBytes[7] = (byte)(clockSeq >> 8);
-            guidBytes[8] = (byte)(node[0] & 0x3f | 0x80);
-            guidBytes[9] = node[1];
-            guidBytes[10] = node[2];
-            guidBytes[11] = node[3];
-            guidBytes[12] = node[4];
-            guidBytes[13] = node[5];
-            guidBytes[14] = node[6];
-            guidBytes[15] = node[7];
+            var b = (ushort)(msec | ((unixTs & 0xF) << 12));
+            var c = (ushort) clockSeq;
 
-            return new Guid(guidBytes);
+            return new Guid(a, b, c,
+                d: (byte)(node[0] & 0x3f | 0x80),
+                e: node[1],
+                f: node[2],
+                g: node[3],
+                h: node[4],
+                i: node[5],
+                j: node[6],
+                k: node[7]);
         }
     }
 }
