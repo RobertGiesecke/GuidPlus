@@ -23,16 +23,15 @@ namespace GuidPlus
 
 #if !NETSTANDARD2_0
             Span<byte> node = stackalloc byte[6];
+            var span = node;
 #else
             using var nodeScope = ArrayScope.Rent<byte>(6);
             var node = nodeScope.Array;
+            var span = nodeScope.AsSpan();
 #endif
-            using (var randomNumberGenerator = RandomNumberGenerator.Create())
-            {
-                randomNumberGenerator.GetBytes(node);
-            }
+            RandomBytes.GetBytes(node, 8);
 
-            return NewGuid(node);
+            return NewGuid(span);
         }
 
         /// <summary>

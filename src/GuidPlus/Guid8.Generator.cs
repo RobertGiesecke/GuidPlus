@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Security.Cryptography;
 
 namespace GuidPlus
 {
@@ -97,10 +96,7 @@ namespace GuidPlus
             /// <param name="node">node buffer, must be at least <paramref name="nodeSize"/> bytes long.</param>
             private static void GenerateRandomNode(int nodeSize, byte[] node)
             {
-                using (var randomNumberGenerator = RandomNumberGenerator.Create())
-                {
-                    randomNumberGenerator.GetBytes(node, 0, nodeSize);
-                }
+                RandomBytes.GetBytes(node, nodeSize);
             }
 
 #if !NETSTANDARD2_0
@@ -110,10 +106,7 @@ namespace GuidPlus
             /// <param name="node">bytes to be randomized.</param>
             private static void GenerateRandomNode(Span<byte> node)
             {
-                using (var randomNumberGenerator = RandomNumberGenerator.Create())
-                {
-                    randomNumberGenerator.GetBytes(node);
-                }
+                RandomBytes.GetBytes(node);
             }
 #endif
 
