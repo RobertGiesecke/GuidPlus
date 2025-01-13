@@ -13,22 +13,23 @@ namespace GuidPlus
         private static DateTime _lastClock;
         private static int _sequence;
 
+        const int RequiredNodeSize = 6;
+
         /// <summary>
         /// Generates a version 6 UUID.
         /// The node bytes are filled with with a cryptographically strong random sequence of bytes.
         /// </summary>
         public static Guid NewGuid()
         {
-            const int requiredNodeSize = 6;
 #if !NETSTANDARD2_0
-            Span<byte> node = stackalloc byte[requiredNodeSize];
+            Span<byte> node = stackalloc byte[RequiredNodeSize];
             var span = node;
 #else
-            using var nodeScope = ArrayScope.Rent<byte>(requiredNodeSize);
+            using var nodeScope = ArrayScope.Rent<byte>(RequiredNodeSize);
             var node = nodeScope.Array;
             var span = nodeScope.AsSpan();
 #endif
-            RandomBytes.GetBytes(node, requiredNodeSize);
+            RandomBytes.GetBytes(node, RequiredNodeSize);
 
             return NewGuid(span);
         }
@@ -37,17 +38,27 @@ namespace GuidPlus
         /// Generates a version 6 UUID with the specified node bytes.
         /// </summary>
         /// <param name="node">6 node bytes to add to the end of the GUID.</param>
-        public static Guid NewGuid(byte[] node) => NewGuid(node.AsSpan());
+        /// <param name="randomizeNode">should the contents of <paramref name="node"/> be randomized?</param>
+        public static Guid NewGuid(byte[] node, bool randomizeNode = false)
+        {
+            if (randomizeNode)
+            {
+                RandomBytes.GetBytes(node, RequiredNodeSize);
+            }
+
+            return NewGuid(node.AsSpan(), randomizeNode: false);
+        }
 
         /// <summary>
         /// Generates a version 6 UUID with the specified node bytes.
         /// </summary>
         /// <param name="node">6 node bytes to add to the end of the GUID.</param>
-        public static Guid NewGuid(Span<byte> node)
+        /// <param name="randomizeNode">should the contents of <paramref name="node"/> be randomized?</param>
+        public static Guid NewGuid(Span<byte> node, bool randomizeNode = false)
         {
-            if (node.Length != 6)
+            if (node.Length != RequiredNodeSize)
             {
-                throw new ArgumentException("Node length must be 6 bytes.", nameof(node));
+                throw new ArgumentException($"Node length must be {RequiredNodeSize} bytes.", nameof(node));
             }
 
             DateTime clock;
@@ -65,6 +76,11 @@ namespace GuidPlus
             var timeMid = (short)(timestamp >> 12);
             var timeLow = (short)(timestamp & 0x0fff | 0x6000);
             var clockSeq = sequence & 0x3fff | 0x8000;
+
+            if (randomizeNode)
+            {
+                RandomBytes.GetBytes(node);
+            }
 
             return new Guid(
                 timeHigh,

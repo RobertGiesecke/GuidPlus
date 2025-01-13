@@ -10,6 +10,7 @@ namespace GuidPlus
         /// <summary>
         /// Generates a UUID.
         /// </summary>
-        Guid NewGuid();
+        /// <param name="randomizeNode">randomize the potentially cached random components?</param>
+        Guid NewGuid(bool randomizeNode = false);
     }
 }

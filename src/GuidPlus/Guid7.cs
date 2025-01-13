@@ -13,22 +13,23 @@ namespace GuidPlus
         private static DateTime _lastClock;
         private static int _sequence;
 
+        const int RequiredNodeSize = 8;
+
         /// <summary>
         /// Generates a version 7 UUID.
         /// The node bytes are filled with with a cryptographically strong random sequence of bytes.
         /// </summary>
         public static Guid NewGuid()
         {
-            const int requiredNodeSize = 8;
 #if !NETSTANDARD2_0
-            Span<byte> node = stackalloc byte[requiredNodeSize];
+            Span<byte> node = stackalloc byte[RequiredNodeSize];
             var span = node;
 #else
-            using var nodeScope = ArrayScope.Rent<byte>(requiredNodeSize);
+            using var nodeScope = ArrayScope.Rent<byte>(RequiredNodeSize);
             var node = nodeScope.Array;
             var span = nodeScope.AsSpan();
 #endif
-            RandomBytes.GetBytes(node, requiredNodeSize);
+            RandomBytes.GetBytes(node, RequiredNodeSize);
 
             return NewGuid(span);
         }
@@ -40,7 +41,15 @@ namespace GuidPlus
         /// 8 node bytes to add to the end of the GUID.
         /// The first two bits of the first byte will by overwritten with <c>0b10</c>.
         /// </param>
-        public static Guid NewGuid(byte[] node) => NewGuid(node.AsSpan());
+        /// <param name="randomizeNode">should the contents of <paramref name="node"/> be randomized?</param>
+        public static Guid NewGuid(byte[] node, bool randomizeNode = false)
+        {
+            if (randomizeNode)
+            {
+                RandomBytes.GetBytes(node, RequiredNodeSize);
+            }
+            return NewGuid(node.AsSpan(), randomizeNode: false);
+        }
 
         /// <summary>
         /// Generates a version 7 UUID with the specified node bytes.
@@ -49,11 +58,12 @@ namespace GuidPlus
         /// 8 node bytes to add to the end of the GUID.
         /// The first two bits of the first byte will by overwritten with <c>0b10</c>.
         /// </param>
-        public static Guid NewGuid(Span<byte> node)
+        /// <param name="randomizeNode">should the contents of <paramref name="node"/> be randomized?</param>
+        public static Guid NewGuid(Span<byte> node, bool randomizeNode = false)
         {
-            if (node.Length != 8)
+            if (node.Length != RequiredNodeSize)
             {
-                throw new ArgumentException("Node length must be 8 bytes.", nameof(node));
+                throw new ArgumentException($"Node length must be {RequiredNodeSize} bytes.", nameof(node));
             }
 
             DateTime clock;
@@ -77,6 +87,11 @@ namespace GuidPlus
 
             var b = (ushort)(msec | ((unixTs & 0xF) << 12));
             var c = (ushort) clockSeq;
+
+            if (randomizeNode)
+            {
+                RandomBytes.GetBytes(node);
+            }
 
             return new Guid(a, b, c,
                 d: (byte)(node[0] & 0x3f | 0x80),

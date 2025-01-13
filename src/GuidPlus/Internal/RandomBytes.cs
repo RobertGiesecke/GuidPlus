@@ -27,6 +27,18 @@ internal static class RandomBytes
     {
         GetRandom().NextBytes(bytes);
     }
+
+    public static void GetBytes(Span<byte> bytes)
+    {
+        GetBytes(bytes, bytes.Length);
+    }
+
+    public static void GetBytes(Span<byte> bytes, int length)
+    {
+        using var copy = ArrayScope.Rent<byte>(length);
+        RandomBytes.GetBytes(copy.Array, length);
+        copy.AsSpan().CopyTo(bytes);
+    }
 #else
     public static void GetBytes(byte[] bytes, int length)
     {

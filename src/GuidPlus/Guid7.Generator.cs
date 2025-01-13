@@ -32,9 +32,9 @@ namespace GuidPlus
             }
 
             /// <inheritdoc />
-            public Guid NewGuid()
+            public Guid NewGuid(bool randomizeNode = false)
             {
-                return Guid7.NewGuid(_node);
+                return Guid7.NewGuid(_node, randomizeNode);
             }
         }
     }

@@ -111,7 +111,7 @@ namespace GuidPlus
 #endif
 
             /// <inheritdoc />
-            public Guid NewGuid()
+            public Guid NewGuid(bool randomizeNode = false)
             {
                 ulong clock;
                 int sequence;
@@ -133,6 +133,10 @@ namespace GuidPlus
                 if (_nodeBuffer != null)
                 {
                     var node = _nodeBuffer.AsSpan();
+                    if (randomizeNode)
+                    {
+                        RandomBytes.GetBytes(_nodeBuffer);
+                    }
                     return GuidFromNode(node, timestamp32, timestamp48, timeOrSeq, sequence);
                 }
 
